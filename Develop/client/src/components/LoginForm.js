@@ -1,14 +1,23 @@
 // see SignupForm.js for comments
+import { useLazyQuery } from '@apollo/client';
 import React, { useState } from 'react';
 import { Form, Button, Alert } from 'react-bootstrap';
-
 import { loginUser } from '../utils/API';
 import Auth from '../utils/auth';
+import {client} from '../App'
+import {LOGIN} from "../graphql"
+
 
 const LoginForm = () => {
   const [userFormData, setUserFormData] = useState({ email: '', password: '' });
   const [validated] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  let [login,{loading, error, data}] = useLazyQuery(LOGIN, {
+    variables: {
+      email: userFormData.email,
+      password: userFormData.password
+    }
+  });
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -26,15 +35,20 @@ const LoginForm = () => {
     }
 
     try {
-      const response = await loginUser(userFormData);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      const { token, user } = await response.json();
+      await client
+      .query({
+        query: LOGIN,
+        variables: {
+          email:userFormData.email,
+          password: userFormData.password
+        }
+      })
+  .then(result => {
+      const token = result.data.login.token.token;
+      const user = result.data.login.User;
       console.log(user);
       Auth.login(token);
+  });
     } catch (err) {
       console.error(err);
       setShowAlert(true);

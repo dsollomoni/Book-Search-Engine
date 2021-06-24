@@ -3,6 +3,9 @@ import { Form, Button, Alert } from 'react-bootstrap';
 
 import { createUser } from '../utils/API';
 import Auth from '../utils/auth';
+import {client} from '../App'
+import {SIGNUP} from "../graphql"
+
 
 const SignupForm = () => {
   // set initial form state
@@ -28,15 +31,21 @@ const SignupForm = () => {
     }
 
     try {
-      const response = await createUser(userFormData);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      const { token, user } = await response.json();
-      console.log(user);
-      Auth.login(token);
+      await client
+      .mutate({
+        mutation: SIGNUP,
+        variables: {
+          email:userFormData.email,
+          password: userFormData.password,
+          username: userFormData.username
+        }
+      })
+      .then(result => {
+          const token = result.data.createUser.token.token;
+          const user = result.data.createUser.User;
+          console.log(user);
+          Auth.login(token);
+    });
     } catch (err) {
       console.error(err);
       setShowAlert(true);

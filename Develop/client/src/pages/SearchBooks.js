@@ -4,6 +4,8 @@ import { Jumbotron, Container, Col, Form, Button, Card, CardColumns } from 'reac
 import Auth from '../utils/auth';
 import { saveBook, searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
+import {client} from '../App'
+import {SAVEBOOK} from "../graphql"
 
 const SearchBooks = () => {
   // create state for holding returned google api data
@@ -65,11 +67,24 @@ const SearchBooks = () => {
     }
 
     try {
-      const response = await saveBook(bookToSave, token);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
+      await client
+      .mutate({
+        mutation: SAVEBOOK,
+        variables: {
+          token: token,
+          BookInput: {
+            title: bookToSave.title,
+            authors: bookToSave.authors,
+            description: bookToSave.description,
+            bookId: bookToSave.bookId,
+            image: bookToSave.image,
+            link: null
+          }
+        }
+      })
+      .then(result => {
+        console.log(result.data.createUser)
+      });
 
       // if book successfully saves to user's account, save book id to state
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);

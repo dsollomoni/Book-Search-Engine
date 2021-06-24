@@ -4,6 +4,8 @@ import { Jumbotron, Container, CardColumns, Card, Button } from 'react-bootstrap
 import { getMe, deleteBook } from '../utils/API';
 import Auth from '../utils/auth';
 import { removeBookId } from '../utils/localStorage';
+import {client} from '../App'
+import {DELETEBOOK, GETME} from "../graphql"
 
 const SavedBooks = () => {
   const [userData, setUserData] = useState({});
@@ -20,14 +22,13 @@ const SavedBooks = () => {
           return false;
         }
 
-        const response = await getMe(token);
-
-        if (!response.ok) {
-          throw new Error('something went wrong!');
-        }
-
-        const user = await response.json();
-        setUserData(user);
+        await client
+        .query({
+          query: GETME,
+        })
+        .then(user => {
+          setUserData(user.data.getUserById);
+        })
       } catch (err) {
         console.error(err);
       }
@@ -45,16 +46,21 @@ const SavedBooks = () => {
     }
 
     try {
-      const response = await deleteBook(bookId, token);
-
-      if (!response.ok) {
-        throw new Error('something went wrong!');
-      }
-
-      const updatedUser = await response.json();
-      setUserData(updatedUser);
+      await client
+      .mutate({
+        mutation: DELETEBOOK,
+        variables: {
+          token: token,
+          bookId
+        }
+      })
+      .then(updatedUser => {
+       
+        setUserData(updatedUser.data.deleteBook);
       // upon success, remove book's id from localStorage
       removeBookId(bookId);
+      });
+      
     } catch (err) {
       console.error(err);
     }
