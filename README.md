@@ -10,6 +10,8 @@ SO THAT I can keep a list of books to purchase
 
 if git cloning use ```npm i``` then ```npm run build``` then ```npm start```. 
 
+You also should create your own env.
+
 
 ## Preview
 
